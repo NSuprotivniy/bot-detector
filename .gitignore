@@ -2,3 +2,12 @@
 target/
 spark-warehouse/
 bot-detector.iml
+
+# Ignore data for apache examples
+data/
+
+# Ignore resourses (generated data via src/main/java/Utils/GenerateData.java)
+res/
+
+# Ignore apache examples
+src/main/java/examples/*
