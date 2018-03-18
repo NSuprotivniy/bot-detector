@@ -1,22 +1,17 @@
-import org.apache.spark.mllib.stat.Statistics;
+import Helpers.GetVMSpark;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import static org.apache.spark.sql.functions.*;
 
-import java.io.IOException;
 
 public class AuthTimestampAnalyzer {
 
     public static void main(String[] args) {
-        SparkSession spark = SparkSession
-                .builder()
-                .appName("Java Spark SQL basic example")
-                .master("local[4]")
-                .getOrCreate();
+        SparkSession spark = GetVMSpark.get("AuthTimestampAnalyzer");
 
-        Dataset<Row> df = spark.read().option("header", "true").csv("../bots_logins.csv");
+        Dataset<Row> df = spark.read().option("header", "true").csv("hdfs://10.8.0.10:9000/team/team/bots_logins.csv");
         df.printSchema();
 
         df = df.withColumn("IP", col("IP").cast(DataTypes.IntegerType))
@@ -35,11 +30,8 @@ public class AuthTimestampAnalyzer {
                 variance("TIMESTAMP").alias("variance"),
                 max("TIMESTAMP").alias("MAX"),
                 min("TIMESTAMP").alias("MIN")
-
         );
 
         IPSimpleStat.show();
-
-        // https://spark.apache.org/docs/latest/mllib-statistics.html
     }
 }

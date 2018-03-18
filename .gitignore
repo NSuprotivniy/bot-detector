@@ -1,4 +1,8 @@
 .idea/
 target/
 spark-warehouse/
-bot-detector.iml
+*.iml
+data/
+*.log
+.ipynb_checkpoints/
+config/*.conf
