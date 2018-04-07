@@ -1,46 +1,41 @@
-// Here You can type your custom JavaScript..
-   
+'allow pasting'
 
-var field_email = document.getElementById('field_email');
-var field_password = document.getElementById('field_password');
-var login_button = $x("//*[contains(@data-l,'loginButton')]")[0];
+var mainContent = document.getElementById('mainContent');
+mainContent.addEventListener("click", determineElement);
+mainContent.addEventListener("mousemove", mouseMoveEvent);
+OK.hookModel.addActivityAidToNextRequest(function() {console.log("hello");})
 
-var XHR = ("onload" in new XMLHttpRequest()) ? XMLHttpRequest : XDomainRequest;
-var xhr = new XHR();
+OK.onload.addCallback(function() {
+    console.log("Onload");
+});
 
-xhr.onload = function() {
-  alert( this.responseText );
+function determineElement(e) {
+    var el = e.target;
+    if (        
+        !!el.closest('[data-module = "LikeComponent"]') || 
+        !!el.closest('input') ||
+        !!el.closest('a') ||
+        !!el.closest('img')
+        )
+    {
+        getStat(e);   
+    }
 }
-
-
-xhr.onerror = function() {
-  console.log( 'Ошибка ' + this.status );
-}
-
-// field_email.addEventListener('mousemove', getStat, false);
-// field_password.addEventListener('mousemove', getStat, false);
-// login_button.addEventListener('mousemove', getStat, false);
-
-document.addEventListener('mousemove', getStat, false);
 
 function getOffset( el ) {
-    var _x = 0;
-    var _y = 0;
+    var x = 0;
+    var y = 0;
     while( el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
-        _x += el.offsetLeft - el.scrollLeft;
-        _y += el.offsetTop - el.scrollTop;
+        x += el.offsetLeft - el.scrollLeft;
+        y += el.offsetTop - el.scrollTop;
         el = el.offsetParent;
     }
-    return { top: _y, left: _x };
+    return { top: y, left: x };
 }
-var x = getOffset( document.getElementById('yourElId') ).left; 
 
-function getStat(event) {  
-    
-    event.stopPropagation();
-    
-    var x = event.pageX;
-    var y = event.pageY;
+function getStat(event) {      
+    var mouse_x = event.pageX;
+    var mouse_y = event.pageY;
   
     var pos = getOffset(event.target);
     var elem_y1 = pos.top;
@@ -48,30 +43,61 @@ function getStat(event) {
     var elem_x1 = pos.left;
     var elem_x2 = elem_x1 + event.target.offsetWidth;
     
-    var response = {};
+    var info = {};
     
-    response.target_id = event.target.id;    
-    response.target_type = event.target.type;  
-    response.target_value = event.target.value;      
-    response.element_position_top_left = elem_x1 + ", " + elem_y1;
-    response.element_position_bottom_right = elem_x2 + ", " + elem_y2;
-    response.mouse_position = x + ", " + y;
+    info.stat_type = "click";
+    info.element_id = event.target.id;
+    info.element_class_name = event.target.className; 
+    info.element_tag_name = event.target.tagName; 
+    info.element_oktarget = event.okTarget;
+    info.element_position_top_left_x = elem_x1;
+    info.element_position_top_left_y = elem_y1;
+    info.element_position_bottom_right_x = elem_x2;
+    info.element_position_bottom_right_y = elem_y2;
+    info.mouse_position_x = mouse_x;
+    info.mouse_position_y = mouse_y;
+    info.window_width = window.innerWidth;
+    info.window_height = window.innerHeight;
+    info.client_timestamp = event.timeStamp;   
     
-    var r_tl_x = x-elem_x1;
-    var r_tl_y = y-elem_y1;
-    var r_br_x = elem_x2-x;
-    var r_br_y = elem_y2-y;
+    console.log(info);
     
-    response.relative_to_tl = r_tl_x + ", " + r_tl_y;
-    response.relative_to_br = r_br_x + ", " + r_br_y;
-    
-    if(r_tl_x == 0 || r_tl_y == 0 || r_br_x == 0 || r_br_y == 0)
-    {
-        response.warning = "HIT THE BORDER!";
-    }
-    
-    console.log(response);
-    
-    xhr.open("POST", "http://127.0.0.1:8080/", true);
-    xhr.send(JSON.stringify(response));
+    //xhr.open("POST", "http://127.0.0.1:8080/", true);
+    //xhr.send(info);
 }
+
+(function() {
+    var cssLoadDurations = Object.values(OK.perf.cssEntries).map(v => v.duration);
+    var info = {};
+    info.stat_type = "css_load";
+    info.max_css_load_duration = Math.max(...cssLoadDurations);
+    info.min_css_load_duration = Math.min(...cssLoadDurations);
+    
+    console.log(info);
+    
+    //xhr.open("POST", "http://127.0.0.1:8080/", true);
+    //xhr.send(info);
+})();
+
+function mouseMoveEvent(e) {
+    mainContent.removeEventListener(e.type, arguments.callee);
+    
+    var info = {};
+    info.stat_type = "mouse_move";
+    info.window_width = window.innerWidth;
+    info.window_height = window.innerHeight;
+    info.mouse_position_x = e.pageX;
+    info.mouse_position_y = e.pageY;
+    info.client_timestamp = event.timeStamp;   
+    
+    console.log(info);
+    
+    //xhr.open("POST", "http://127.0.0.1:8080/", true);
+    //xhr.send(info);
+};
+
+
+/*
+Exception: SyntaxError: missing ) after argument list
+@Scratchpad/1:11
+*/
