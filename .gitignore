@@ -1,7 +1,7 @@
 .idea/
 target/
 spark-warehouse/
-bot-detector.iml
+*.iml
 
 # Ignore data for apache examples
 data/
@@ -11,3 +11,7 @@ res/
 
 # Ignore apache examples
 src/main/java/examples/*
+
+*.log
+.ipynb_checkpoints/
+config/*.conf

@@ -23,14 +23,14 @@ public class AuthTimestampAnalyzer {
      *  COUNT_ACT_WEEK - колонка с числом действий за неделю
      *  COUNT_ACT_1 - колонка с числом действий за первые пол дня
      *  ...
-      */
+     */
     public static Dataset<Row> extractFeatures(Dataset<Row> df) {
 
         df = df.withColumn("ACT_1",
-                        when(col("TIMESTAMP").lt(GenerateData.FIRST_DAY_7PM_IN_SECONDS - 7 * 3600), col("TIMESTAMP")))
+                when(col("TIMESTAMP").lt(GenerateData.FIRST_DAY_7PM_IN_SECONDS - 7 * 3600), col("TIMESTAMP")))
                 .withColumn("ACT_2",
                         when(col("TIMESTAMP").gt(GenerateData.FIRST_DAY_7PM_IN_SECONDS - 7 * 3600)
-                                .and(col("TIMESTAMP").lt(GenerateData.FIRST_DAY_7PM_IN_SECONDS + 5 * 3600)),
+                                        .and(col("TIMESTAMP").lt(GenerateData.FIRST_DAY_7PM_IN_SECONDS + 5 * 3600)),
                                 col("TIMESTAMP")))
                 .withColumn("ACT_3",
                         when(col("TIMESTAMP").gt(GenerateData.FIRST_DAY_7PM_IN_SECONDS + 5 * 3600)
@@ -38,17 +38,17 @@ public class AuthTimestampAnalyzer {
                                 col("TIMESTAMP")))
                 .withColumn("ACT_4",
                         when(col("TIMESTAMP").gt(GenerateData.SECOND_DAY_7PM_IN_SECONDS - 7 * 3600).
-                                and(col("TIMESTAMP").lt(GenerateData.SECOND_DAY_7PM_IN_SECONDS + 5 * 3600)),
+                                        and(col("TIMESTAMP").lt(GenerateData.SECOND_DAY_7PM_IN_SECONDS + 5 * 3600)),
                                 col("TIMESTAMP")))
                 .withColumn("ACT_5",
                         when(col("TIMESTAMP").gt(GenerateData.SECOND_DAY_7PM_IN_SECONDS + 5 * 3600)
-                                .and(col("TIMESTAMP").lt(GenerateData.THIRD_DAY_7PM_IN_SECONDS - 5 * 3600)),
+                                        .and(col("TIMESTAMP").lt(GenerateData.THIRD_DAY_7PM_IN_SECONDS - 5 * 3600)),
                                 col("TIMESTAMP")))
                 .withColumn("ACT_6",
                         when(col("TIMESTAMP").gt(GenerateData.THIRD_DAY_7PM_IN_SECONDS - 7 * 3600)
-                                .and(col("TIMESTAMP").lt(GenerateData.THIRD_DAY_7PM_IN_SECONDS + 5 * 3600)),
+                                        .and(col("TIMESTAMP").lt(GenerateData.THIRD_DAY_7PM_IN_SECONDS + 5 * 3600)),
                                 col("TIMESTAMP")));
-                // ...
+        // ...
 
         df = df.groupBy("IP")
                 .agg(count("TIMESTAMP").as("COUNT_ACT_WEEK"),

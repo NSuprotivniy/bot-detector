@@ -1,0 +1,4 @@
+master=spark://10.8.0.10:7077        # IP адрес SPARK master, не трогать
+spark.driver.host=10.8.0.14          # Укажите IP, который вам выдал OpenVPN
+spark.driver.port=20002              # Формируются случайно, но мне пришлось устанавливать константы
+spark.blockManager.port=20003        # и открывать порты в linux firewall (sudo ufw allow 20003)
