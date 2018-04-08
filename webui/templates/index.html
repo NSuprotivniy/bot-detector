@@ -140,16 +140,9 @@ document.getElementById("testMethod").addEventListener("click", function(e) {
 			req.open("POST", "testmethod", true);
 			req.onload = function () {
 				if (req.status == 200) {
-					var oOutput = document.getElementById("outputDiv");
-					result = req.responseText;
-					var resultJson = JSON.parse(result);
-					html = resultJson['html'];
-					script = resultJson['script'];
-					image = "var rawImg1 = \"" + resultJson['rawImg1'] + "\";";
-					oOutput.innerHTML = html;
-					eval(image);
-					eval(script);
-					renderResult();
+					var jsonData = JSON.parse(req.responseText);
+					var output = document.getElementById("outputDiv");
+					renderJson(jsonData, output);
 				}
 				else
 					alert("Файл не найден! (или что-то поломалось)")
@@ -216,19 +209,7 @@ document.getElementById("predictWithModel").addEventListener("click", function(e
 			if (req.status == 200) {
 				var jsonData = JSON.parse(req.responseText);
 				var output = document.getElementById("outputDiv");
-				while (output.firstChild) {
-					output.removeChild(output.firstChild);
-				}
-				var ul = document.createElement('ul');
-				ul.className = "list-group";
-				output.appendChild(ul);
-				arr = jsonData["array"];
-				for (var entry in arr) {
-					var li = document.createElement('li');
-					li.className = "list-group-item";
-					li.innerHTML = arr[entry]["userId"] + " " + arr[entry]["proba"];
-					ul.appendChild(li);
-				}
+				renderJson(jsonData, output);
 			}
 			else
 				alert("что-то поломалось")
@@ -263,13 +244,25 @@ function selectMethod(method) {
 	}
 }
 
+function renderJson(jsonData, container) {
+	while (container.firstChild) { // clear container
+		container.removeChild(container.firstChild);
+	}
+	html = jsonData['html'];
+	script = jsonData['script'];
+	scriptData = jsonData['data'];
+	container.innerHTML = html;
+	eval(script);
+	renderResult();
+}
+
 // pull system stats
 function executeQuery() {
 	var req = new XMLHttpRequest();
 	req.open("GET", "sysstats", true);
 	req.onload = function () {
 		if (req.status == 200) {
-			output = document.getElementById("systemStats");
+			statsOutput = document.getElementById("systemStats");
 			var jsonData = JSON.parse(req.responseText);
 			var keys = Object.keys(jsonData);
 			var datastring = "";
@@ -277,16 +270,14 @@ function executeQuery() {
 				var key = keys[i];
 				datastring = datastring + key + " " + jsonData[key] + "\n";
 			}
-			output.innerHTML = datastring;
+			statsOutput.innerHTML = datastring;
 		}
-		else
-			alert("что-то поломалось")
 	};
 	req.send();
-	setTimeout(executeQuery, 1000);
+	setTimeout(executeQuery, 2000);
 }
 
-setTimeout(executeQuery, 1000);
+executeQuery(); // start pulling info about server stats
 </script>
 
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>

@@ -147,6 +147,21 @@ class HeadersModel(baseModel):
 		proba_array = self.model.predict_proba(predictX)
 		data = {}
 		data["array"] = []
+		data["html"] = ""
+		data["script"] ="""function renderResult() {
+						var ul = document.createElement('ul');
+						ul.className = 'list-group';
+						container.appendChild(ul);
+						arr = jsonData['array'];
+						for (var entry in arr) {
+							var li = document.createElement('li');
+							li.className = 'list-group-item';
+							li.innerHTML = arr[entry]["userId"] + " " + arr[entry]['proba'];
+							ul.appendChild(li);
+							}
+						}
+						"""
+		data["data"] = {}
 		proba_index = 0
 		for index, row in predictDs.iterrows():
 			entry = {}
@@ -177,9 +192,13 @@ class HeadersModel(baseModel):
 		with open(os.path.join(GRAPH_DIR, 'result.png'), "rb") as imageFile:
 			imageBase64 = base64.b64encode(imageFile.read())
 		data = {}
-		data['html'] = "<img id=\"resultGraph\" src=\"\"/>";
-		data['script'] = "function renderResult() {$(\"#resultGraph\").attr(\"src\",\"data:image/gif;base64,\"+rawImg1);}"
-		data['rawImg1'] = imageBase64.decode("ascii")
+		data["html"] = "<img id='resultGraph' src=''/>";
+		data["script"] ="""function renderResult() { 
+						var rawImg1 = scriptData['rawImg1']; 
+						$('#resultGraph').attr('src','data:image/gif;base64,'+rawImg1);}
+						"""
+		data["data"] = {}
+		data["data"]["rawImg1"] = imageBase64.decode("ascii")
 		return data
 	def saveModel(self, name):
 		filename = os.path.join(MODELS_DIR, self.modelType, name + "." + self.type_file_extension)
