@@ -15,3 +15,7 @@ src/main/java/examples/*
 *.log
 .ipynb_checkpoints/
 config/*.conf
+
+# greg
+# запускаю юпитер в docker-контейнере
+run_docker_jupyter.py
