@@ -257,6 +257,9 @@ function renderJson(jsonData, container) {
 }
 
 // pull system stats
+var numberSent = 0;
+var numberRecieved = 0;
+var sendNextTimeout = 1000;
 function executeQuery() {
 	var req = new XMLHttpRequest();
 	req.open("GET", "sysstats", true);
@@ -271,10 +274,17 @@ function executeQuery() {
 				datastring = datastring + key + " " + jsonData[key] + "\n";
 			}
 			statsOutput.innerHTML = datastring;
+			numberRecieved++;
 		}
 	};
 	req.send();
-	setTimeout(executeQuery, 2000);
+	numberSent++;
+	if(numberRecieved >= (numberSent-1)) {
+		sendNextTimeout -= 100;
+	}	
+	else
+		sendNextTimeout += 100;
+	setTimeout(executeQuery, sendNextTimeout);
 }
 
 executeQuery(); // start pulling info about server stats
