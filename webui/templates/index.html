@@ -3,7 +3,7 @@
 <div>
 	<ul id="dataList" class="list-group">
 	{% for file in files %}
-	  <li class="list-group-item">{{ file }}</li>
+	  <li class="list-group-item">{{ file }}<button class="btn btn-danger pull-right">Удалить</button></li>
 	{% end %}
 	</ul>
 </div>
@@ -11,7 +11,7 @@
 	<input type="file" class="btn btn-secondary" name="data" required />
 	<input type="submit" class="btn btn-primary" value="Добавить" />
 </form>
-<button id="deleteDataFile" class="btn btn-danger">Удалить</button>
+
 <div class="dropdown">
   <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
     Анализ HTTP заголовков
@@ -21,28 +21,47 @@
     <a class="dropdown-item" href="#" onclick='selectMethod(2)'>Анализ логинов</a>
   </div>
 </div>
-<button id="testMethod" class="btn btn-info">Тестирование модели</button>
-<input type="text" placeholder="Sample size" class="form-control" id="sampleSizeInput">
+
 <div>
-<img id="target" src=""/>
+	<ul id="modelList" class="list-group">
+	{% for model in models %}
+	  <li class="list-group-item">{{ model }}<button class="btn btn-danger pull-right">Удалить</button></li>
+	{% end %}
+	</ul>
+</div>
+
+<button id="trainModel" class="btn btn-info">Обучить модель</button>
+<button id="testMethod" class="btn btn-info">Тестирование метода</button>
+<input type="text" placeholder="Model name" class="form-control" id="modelName">
+<input type="text" placeholder="Sample size" class="form-control" id="sampleSizeInput">
+<button id="predictWithModel" class="btn btn-info">Предсказать</button>
+<input type="text" placeholder="Query" class="form-control" id="dataQuery">
+
+<div id="outputDiv">
 </div>
 
 <script>
 var form = document.forms.namedItem("dataupload");
 var selectedData = null;
 var selectedMethod = 1;
+var selectedModel = null;
 
 form.addEventListener('submit', function(ev) {
 	var oOutput = document.getElementById("dataList");
     var oData = new FormData(form);
-	oData.append("CustomField", "This is some extra data");
 	var req = new XMLHttpRequest();
 	req.open("POST", "upload", true);
 	req.onload = function(oEvent) {
 		if (req.status == 200) {
 			var li = document.createElement('li');
-			li.className = "list-group-item"
-			li.innerHTML = req.responseText;
+			var deleteButton = document.createElement('button');
+			deleteButton.className = "btn btn-danger pull-right";
+			deleteButton.innerHTML = "Удалить";
+			li.className = "list-group-item";
+			result = req.responseText;
+			var resultJson = JSON.parse(result);
+			li.innerHTML = resultJson["name"];
+			li.appendChild(deleteButton);
 			oOutput.appendChild(li);
 		} else if (req.status == 201) {
 		
@@ -63,25 +82,52 @@ document.getElementById("dataList").addEventListener("click", function(e) {
 		selectedData = e.target;
 		selectedData.className = "list-group-item active";
 	}
-});
-
-document.getElementById("deleteDataFile").addEventListener("click", function(e) {
-	if(selectedData) {
+	else if (e.target && e.target.matches("button")) {
+		var deleteData = e.target.parentElement;
 		var req = new XMLHttpRequest();
 		req.open("DELETE", "deletedata", true);
 		req.onload = function () {
 			if (req.status == 200) {
 				var oOutput = document.getElementById("dataList");
-				oOutput.removeChild(selectedData);
-				selectedData = null;
+				oOutput.removeChild(deleteData);
+				deleteData = null;
 			}
 			else
 				alert("Файл не найден! (или что-то поломалось)")
 		};
-		req.send(selectedData.innerHTML);
+		var jsonQuery = {};
+		jsonQuery["name"] = getDataFileNameFromElement(deleteData);
+		var jsonData = JSON.stringify(jsonQuery);
+		req.send(jsonData); 
 	}
-	else
-		alert("Файл не выбран!")
+});
+
+document.getElementById("modelList").addEventListener("click", function(e) {
+	if (e.target && e.target.matches("li")) {
+		if (selectedModel)
+			selectedModel.className = "list-group-item";
+		selectedModel = e.target;
+		selectedModel.className = "list-group-item active";
+	}
+	else if (e.target && e.target.matches("button")) {
+		var deletedModel = e.target.parentElement;
+		var req = new XMLHttpRequest();
+		req.open("DELETE", "deletemodel", true);
+		req.onload = function () {
+			if (req.status == 200) {
+				var oOutput = document.getElementById("modelList");
+				oOutput.removeChild(deletedModel);
+				deletedModel = null;
+			}
+			else
+				alert("Модель не найдена!")
+		};
+		var jsonQuery = {};
+		jsonQuery["method"] = selectedMethod;
+		jsonQuery["name"] = getDataFileNameFromElement(deletedModel);
+		var jsonData = JSON.stringify(jsonQuery);
+		req.send(jsonData);
+	}
 });
 
 document.getElementById("testMethod").addEventListener("click", function(e) {
@@ -89,14 +135,29 @@ document.getElementById("testMethod").addEventListener("click", function(e) {
 		sampleSize = document.getElementById("sampleSizeInput").value;
 		if (+sampleSize === parseInt(sampleSize, 10)) {
 			var req = new XMLHttpRequest();
-			req.open("POST", "headersTest", true);
+			req.open("POST", "testmethod", true);
 			req.onload = function () {
-				if (req.status == 200)
-					$("#target").attr("src","data:image/gif;base64," + req.responseText);
+				if (req.status == 200) {
+					var oOutput = document.getElementById("outputDiv");
+					result = req.responseText;
+					var resultJson = JSON.parse(result);
+					html = resultJson['html'];
+					script = resultJson['script'];
+					image = "var rawImg1 = \"" + resultJson['rawImg1'] + "\";";
+					oOutput.innerHTML = html;
+					eval(image);
+					eval(script);
+					renderResult();
+				}
 				else
 					alert("Файл не найден! (или что-то поломалось)")
 			};
-			req.send(selectedData.innerHTML + " " + sampleSize);
+			var jsonQuery = {};
+			jsonQuery["method"] = selectedMethod;
+			jsonQuery["data"] = getDataFileNameFromElement(selectedData);
+			jsonQuery["sampleSize"] = sampleSize;
+			var jsonData = JSON.stringify(jsonQuery);
+			req.send(jsonData);
 		}
 		else
 			alert("Неверно указан sample size! " + sampleSize);
@@ -105,7 +166,86 @@ document.getElementById("testMethod").addEventListener("click", function(e) {
 		alert("Файл не выбран!")
 });
 
+document.getElementById("trainModel").addEventListener("click", function(e) {
+	if(selectedData) {
+		sampleSize = document.getElementById("sampleSizeInput").value;
+		if (+sampleSize === parseInt(sampleSize, 10)) {
+			var req = new XMLHttpRequest();
+			var name = document.getElementById("modelName").value
+			req.open("POST", "trainmodel", true);
+			req.onload = function () {
+				if (req.status == 200) {
+					var jsonData = JSON.parse(req.responseText);
+					var oOutput = document.getElementById("modelList");
+					var li = document.createElement('li');
+					var deleteButton = document.createElement('button');
+					deleteButton.className = "btn btn-danger pull-right";
+					deleteButton.innerHTML = "Удалить";
+					li.className = "list-group-item";
+					li.innerHTML = jsonData["name"];
+					li.appendChild(deleteButton);
+					oOutput.appendChild(li);
+				} else if (req.status == 201)
+				{
+				
+				} else
+					alert("Файл не найден! (или что-то поломалось)")
+			};
+			var jsonQuery = {};
+			jsonQuery["method"] = selectedMethod;
+			jsonQuery["data"] = getDataFileNameFromElement(selectedData);
+			jsonQuery["sampleSize"] = sampleSize;
+			jsonQuery["name"] = name;
+			var jsonData = JSON.stringify(jsonQuery);
+			req.send(jsonData);
+		}
+		else
+			alert("Неверно указан sample size! " + sampleSize);
+	}
+	else
+		alert("Файл не выбран!")
+});
 
+document.getElementById("predictWithModel").addEventListener("click", function(e) {
+	if(selectedData && selectedModel) {
+		var req = new XMLHttpRequest();
+		req.open("POST", "predict", true);
+		req.onload = function () {
+			if (req.status == 200) {
+				var jsonData = JSON.parse(req.responseText);
+				var output = document.getElementById("outputDiv");
+				while (output.firstChild) {
+					output.removeChild(output.firstChild);
+				}
+				var ul = document.createElement('ul');
+				ul.className = "list-group";
+				output.appendChild(ul);
+				arr = jsonData["array"];
+				for (var entry in arr) {
+					var li = document.createElement('li');
+					li.className = "list-group-item";
+					li.innerHTML = arr[entry]["userId"] + " " + arr[entry]["proba"];
+					ul.appendChild(li);
+				}
+			}
+			else
+				alert("что-то поломалось")
+		};
+		var jsonQuery = {};
+		jsonQuery["method"] = selectedMethod;
+		jsonQuery["data"] = getDataFileNameFromElement(selectedData);
+		jsonQuery["name"] = getDataFileNameFromElement(selectedModel);
+		jsonQuery["query"] = document.getElementById("dataQuery").value;
+		var jsonData = JSON.stringify(jsonQuery);
+		req.send(jsonData);
+	}
+	else
+		alert("Выберете данные и модель!")
+});
+
+function getDataFileNameFromElement(liElem) {
+	return liElem.innerHTML.split("<button")[0];
+}
 
 function selectMethod(method) {
 	dropdown = document.getElementById("dropdownMenuButton")
