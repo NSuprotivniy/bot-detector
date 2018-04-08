@@ -1,5 +1,7 @@
 import tornado.httpserver, tornado.ioloop, tornado.options, tornado.web, os.path, random, string
 from tornado.options import define, options
+from tornado.concurrent import run_on_executor
+from concurrent.futures import ThreadPoolExecutor
 import pickle
 import base64
 import copy
@@ -144,7 +146,6 @@ class HeadersModel(baseModel):
 			entry["proba"] = proba_array[proba_index][1]
 			data["array"].append(entry)
 			proba_index = proba_index + 1
-		print(data)
 		return data
 	def test(self):
 		cv_scores, holdout_scores = [], []
@@ -215,7 +216,10 @@ def trainModel(methodType, dataFile, sampleSize, name):
 		data = {}
 		data['name'] = name + "." + headers.type_file_extension
 		return json.dumps(data)
+		
 
+executor = ThreadPoolExecutor(max_workers=8)
+		
 class Application(tornado.web.Application):
 	def __init__(self):
 		handlers = [
@@ -236,76 +240,119 @@ class IndexHandler(tornado.web.RequestHandler):
 		self.render("templates/index.html", files=files, models=models)
 		
 class UploadHandler(tornado.web.RequestHandler):
-	def post(self):
-		file1 = self.request.files['data'][0]
-		original_fname = file1['filename']
+	executor = executor
+	@run_on_executor
+	def start_worker(self):
+		original_fname = self.file1['filename']
 		extension = os.path.splitext(original_fname)[1]
 		if(extension != ".parquet"):
 			self.set_status(300)
-			self.finish()
 			return
 		if(os.path.isfile(os.path.join(DATA_DIR, original_fname))):
 			self.set_status(201)
 		output_file = open(os.path.join(DATA_DIR, original_fname), 'wb')
-		output_file.write(file1['body'])
+		output_file.write(self.file1['body'])
 		data = {}
 		data['name'] = original_fname
 		jsonData = json.dumps(data)
-		self.finish(jsonData)
+		return jsonData
+		
+	@tornado.gen.coroutine
+	def post(self):
+		self.file1 = self.request.files['data'][0]
+		res = yield self.start_worker()
+		self.finish(res)
+		
+		
 		
 class DeleteDataHandler(tornado.web.RequestHandler):
-	def delete(self):
-		params = json.loads(self.request.body.decode("utf-8"))
-		name = params["name"]
+	executor = executor
+	@run_on_executor
+	def start_worker(self):
+		name = self.params["name"]
 		try:
 			os.remove(os.path.join(DATA_DIR, name))
 			self.set_status(200)
-			self.finish()
+			return
 		except:
 			self.set_status(404)
-			self.finish()
+			return
+		
+	@tornado.gen.coroutine
+	def delete(self):
+		self.params = json.loads(self.request.body.decode("utf-8"))
+		self.start_worker()
+		self.finish()
 			
 class DeleteModelHandler(tornado.web.RequestHandler):
-	def delete(self):
-		params = json.loads(self.request.body.decode("utf-8"))
-		name = params["name"]
+	executor = executor
+	@run_on_executor
+	def start_worker(self):
+		name = self.params["name"]
 		modelType = None
-		if int(params["method"]) == 1:
+		if int(self.params["method"]) == 1:
 			modelType = "headers"
 		try:
 			os.remove(os.path.join(MODELS_DIR, modelType, name))
 			self.set_status(200)
-			self.finish()
+			return
 		except:
 			self.set_status(404)
-			self.finish()
+			return
+
+	@tornado.gen.coroutine
+	def delete(self):
+		self.params = json.loads(self.request.body.decode("utf-8"))
+		self.start_worker()
+		self.finish()
+		
 			
 class MethodTestHandler(tornado.web.RequestHandler):
+	executor = executor
+	@run_on_executor
+	def start_worker(self):
+		print(self.params)
+		jsonData = testMethod(int(self.params["method"]), self.params["data"], int(self.params["sampleSize"]))
+		return jsonData
+
+	@tornado.gen.coroutine
 	def post(self):
-		params = json.loads(self.request.body.decode("utf-8"))
-		print(params)
-		jsonData = testMethod(int(params["method"]), params["data"], int(params["sampleSize"]))
-		self.finish(jsonData)
+		self.params = json.loads(self.request.body.decode("utf-8"))
+		res = yield self.start_worker()
+		self.finish(res)
 		
 class ModelTrainHandler(tornado.web.RequestHandler):
-	def post(self):
-		params = json.loads(self.request.body.decode("utf-8"))
-		print(params)
-		name = params["name"]
-		if int(params["method"]) == 1:
+	executor = executor
+	@run_on_executor
+	def start_worker(self):
+		print(self.params)
+		name = self.params["name"]
+		if int(self.params["method"]) == 1:
 			modelType = "headers"
 			extension = "hdr"
 		if(os.path.isfile(os.path.join(MODELS_DIR, modelType, name+"."+extension))):
 			self.set_status(201)
-		jsonData = trainModel(int(params["method"]), params["data"], int(params["sampleSize"]), name)
-		print(jsonData)
-		self.finish(jsonData)
+		jsonData = trainModel(int(self.params["method"]), self.params["data"], int(self.params["sampleSize"]), name)
+		return jsonData
+
+	@tornado.gen.coroutine
+	def post(self):
+		self.params = json.loads(self.request.body.decode("utf-8"))
+		res = yield self.start_worker()
+		self.finish(res)
 		
 class ModelPredictHandler(tornado.web.RequestHandler):
+	executor = executor
+	@run_on_executor
+	def start_worker(self):
+		jsonData = modelPredict(self.params["method"], self.params["data"], self.params["name"], self.params["query"])
+		return jsonData
+
+	@tornado.gen.coroutine
 	def post(self):
-		params = json.loads(self.request.body.decode("utf-8"))
-		jsonData = modelPredict(params["method"], params["data"], params["name"], params["query"])
-		self.finish(jsonData)
+		self.params = json.loads(self.request.body.decode("utf-8"))
+		res = yield self.start_worker()
+		self.finish(res)
 
 def main():
 	http_server = tornado.httpserver.HTTPServer(Application())
