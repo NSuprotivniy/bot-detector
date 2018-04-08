@@ -8,7 +8,9 @@ import base64
 import copy
 import json
 import os
+import shutil
 import psutil
+import zipfile
 
 # ml dependencies
 import numpy as np
@@ -75,7 +77,11 @@ class HeadersModel(baseModel):
 	modelType = "headers"
 	type_file_extension = "hdr"
 	def loadData(self, dataFile, sampleSize):
-		self.dataset = pq.read_table(os.path.join(DATA_DIR, dataFile)).to_pandas().head(sampleSize)
+		extension = os.path.splitext(dataFile)[1]
+		if os.path.isdir(os.path.join(DATA_DIR, dataFile)) or extension == ".parquet":
+			self.dataset = pq.read_table(os.path.join(DATA_DIR, dataFile)).to_pandas().head(sampleSize)
+		elif extension == ".csv":
+			self.dataset = pd.read_csv(os.path.join(DATA_DIR, dataFile)).head(sampleSize)
 		self.X = self.dataset[[
 			'userAgentIsBot',
 			'userAgentIsMobile',
@@ -248,13 +254,20 @@ class UploadHandler(tornado.web.RequestHandler):
 	def start_worker(self):
 		original_fname = self.file1['filename']
 		extension = os.path.splitext(original_fname)[1]
-		if(extension != ".parquet"):
+		if extension not in  [".parquet", ".csv", ".zip"]:
 			self.set_status(300)
 			return
-		if(os.path.isfile(os.path.join(DATA_DIR, original_fname))):
+		if os.path.exists(os.path.join(DATA_DIR, original_fname)):
 			self.set_status(201)
 		output_file = open(os.path.join(DATA_DIR, original_fname), 'wb')
 		output_file.write(self.file1['body'])
+		output_file.close()
+		if extension == ".zip":
+			zip_ref = zipfile.ZipFile(os.path.join(DATA_DIR, original_fname), 'r')
+			zip_ref.extractall(DATA_DIR)
+			zip_ref.close()
+			os.remove(os.path.join(DATA_DIR, original_fname))
+			original_fname = os.path.splitext(original_fname)[0]
 		data = {}
 		data['name'] = original_fname
 		jsonData = json.dumps(data)
@@ -274,7 +287,10 @@ class DeleteDataHandler(tornado.web.RequestHandler):
 	def start_worker(self):
 		name = self.params["name"]
 		try:
-			os.remove(os.path.join(DATA_DIR, name))
+			if os.path.isdir(os.path.join(DATA_DIR, name)):
+				shutil.rmtree(os.path.join(DATA_DIR, name))
+			else:
+				os.remove(os.path.join(DATA_DIR, name))
 			self.set_status(200)
 			return
 		except:
