@@ -1,5 +1,7 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<div id="systemStats">
 
+</div>
 <div>
 	<ul id="dataList" class="list-group">
 	{% for file in files %}
@@ -260,6 +262,31 @@ function selectMethod(method) {
 			break;
 	}
 }
+
+// pull system stats
+function executeQuery() {
+	var req = new XMLHttpRequest();
+	req.open("GET", "sysstats", true);
+	req.onload = function () {
+		if (req.status == 200) {
+			output = document.getElementById("systemStats");
+			var jsonData = JSON.parse(req.responseText);
+			var keys = Object.keys(jsonData);
+			var datastring = "";
+			for(var i=0;i<keys.length;i++){
+				var key = keys[i];
+				datastring = datastring + key + " " + jsonData[key] + "\n";
+			}
+			output.innerHTML = datastring;
+		}
+		else
+			alert("что-то поломалось")
+	};
+	req.send();
+	setTimeout(executeQuery, 1000);
+}
+
+setTimeout(executeQuery, 1000);
 </script>
 
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>

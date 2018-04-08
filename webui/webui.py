@@ -2,11 +2,13 @@ import tornado.httpserver, tornado.ioloop, tornado.options, tornado.web, os.path
 from tornado.options import define, options
 from tornado.concurrent import run_on_executor
 from concurrent.futures import ThreadPoolExecutor
+import time
 import pickle
 import base64
 import copy
 import json
 import os
+import psutil
 
 # ml dependencies
 import numpy as np
@@ -229,7 +231,8 @@ class Application(tornado.web.Application):
 			(r"/testmethod", MethodTestHandler),
 			(r"/trainmodel", ModelTrainHandler),
 			(r"/deletemodel", DeleteModelHandler),
-			(r"/predict", ModelPredictHandler)
+			(r"/predict", ModelPredictHandler),
+			(r"/sysstats", SysStatsHandler)
 		]
 		tornado.web.Application.__init__(self, handlers)
 
@@ -351,6 +354,22 @@ class ModelPredictHandler(tornado.web.RequestHandler):
 	@tornado.gen.coroutine
 	def post(self):
 		self.params = json.loads(self.request.body.decode("utf-8"))
+		res = yield self.start_worker()
+		self.finish(res)
+		
+class SysStatsHandler(tornado.web.RequestHandler):
+	executor = executor
+	@run_on_executor
+	def start_worker(self):
+		data = {}
+		data["CPU usage"] = psutil.cpu_percent(interval=1)
+		data["memory usage"] = psutil.virtual_memory().percent
+		data["swap usage"] = psutil.swap_memory().percent
+		jsonData = json.dumps(data)
+		return jsonData
+
+	@tornado.gen.coroutine
+	def get(self):
 		res = yield self.start_worker()
 		self.finish(res)
 
