@@ -1,295 +1,82 @@
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-<div id="systemStats">
+<html>
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="header">
+    <div id="systemStats" class="system-stat-section">
 
+    </div>
 </div>
-<div>
-	<ul id="dataList" class="list-group">
-	{% for file in files %}
-	  <li class="list-group-item">{{ file }}<button class="btn btn-danger pull-right">Удалить</button></li>
-	{% end %}
-	</ul>
+<div class="main-container">
+    <div class="control-section">
+        <div class="data">
+            <ul id="dataList" class="list-group data-list">
+                {% for file in files %}
+                <li class="list-group-item data-list-item">
+                    <div class="list-group-item-filename">{{ file }}</div>
+                    <div class="data-list-delete"><button class="btn btn-danger pull-right">Удалить</button></div>
+                </li>
+                {% end %}
+            </ul>
+        </div>
+
+        <form enctype="multipart/form-data" method="post" name="dataupload">
+            <label class="file_upload border">
+                <input type="submit" class="button btn btn-info" value="Добавить"/>
+                <input type="file" class="" name="data" required/>
+                <mark>Файл не выбран</mark>
+            </label>
+
+        </form>
+
+        <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                    data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                Анализ HTTP заголовков
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <a class="dropdown-item" href="#" onclick='selectMethod(1)'>Анализ HTTP заголовков</a>
+                <a class="dropdown-item" href="#" onclick='selectMethod(2)'>Анализ логинов</a>
+            </div>
+        </div>
+
+        <div class="list-group data-list">
+            <ul id="modelList" class="list-group">
+                {% for model in models %}
+                <li class="list-group-item">
+                    <div class="list-group-item-filename">{{ model }}</div>
+                    <div class="data-list-delete"><button class="btn btn-danger pull-right">Удалить</button></div>
+                </li>
+                {% end %}
+            </ul>
+        </div>
+
+
+        <button id="trainModel" class="btn btn-info">Обучить модель</button>
+        <button id="testMethod" class="btn btn-info">Тестирование метода</button>
+        <input type="text" placeholder="Model name" class="form-control" id="modelName">
+        <input type="text" placeholder="Sample size" class="form-control" id="sampleSizeInput">
+        <button id="predictWithModel" class="btn btn-info">Предсказать</button>
+        <input type="text" placeholder="Query" class="form-control" id="dataQuery">
+    </div>
+
+    <div id="outputDiv" class="output-section">
+    </div>
 </div>
-<form enctype="multipart/form-data" method="post" name="dataupload">
-	<input type="file" class="btn btn-secondary" name="data" required />
-	<input type="submit" class="btn btn-primary" value="Добавить" />
-</form>
 
-<div class="dropdown">
-  <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-    Анализ HTTP заголовков
-  </button>
-  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-    <a class="dropdown-item" href="#" onclick='selectMethod(1)'>Анализ HTTP заголовков</a>
-    <a class="dropdown-item" href="#" onclick='selectMethod(2)'>Анализ логинов</a>
-  </div>
-</div>
-
-<div>
-	<ul id="modelList" class="list-group">
-	{% for model in models %}
-	  <li class="list-group-item">{{ model }}<button class="btn btn-danger pull-right">Удалить</button></li>
-	{% end %}
-	</ul>
-</div>
-
-<button id="trainModel" class="btn btn-info">Обучить модель</button>
-<button id="testMethod" class="btn btn-info">Тестирование метода</button>
-<input type="text" placeholder="Model name" class="form-control" id="modelName">
-<input type="text" placeholder="Sample size" class="form-control" id="sampleSizeInput">
-<button id="predictWithModel" class="btn btn-info">Предсказать</button>
-<input type="text" placeholder="Query" class="form-control" id="dataQuery">
-
-<div id="outputDiv">
-</div>
-
-<script>
-var form = document.forms.namedItem("dataupload");
-var selectedData = null;
-var selectedMethod = 1;
-var selectedModel = null;
-
-form.addEventListener('submit', function(ev) {
-	var oOutput = document.getElementById("dataList");
-    var oData = new FormData(form);
-	var req = new XMLHttpRequest();
-	req.open("POST", "upload", true);
-	req.onload = function(oEvent) {
-		if (req.status == 200) {
-			var li = document.createElement('li');
-			var deleteButton = document.createElement('button');
-			deleteButton.className = "btn btn-danger pull-right";
-			deleteButton.innerHTML = "Удалить";
-			li.className = "list-group-item";
-			result = req.responseText;
-			var resultJson = JSON.parse(result);
-			li.innerHTML = resultJson["name"];
-			li.appendChild(deleteButton);
-			oOutput.appendChild(li);
-		} else if (req.status == 201) {
-		
-		} else if (req.status == 300) {
-			alert("Поддерживаютсяс только .parquet файлы.");
-		} else {
-			oOutput.innerHTML = "Error " + req.status + " occurred when trying to upload your file.<br \/>";
-		}
-	};
-	req.send(oData);
-	ev.preventDefault();
-}, false);
-
-document.getElementById("dataList").addEventListener("click", function(e) {
-	if (e.target && e.target.matches("li")) {
-		if (selectedData)
-			selectedData.className = "list-group-item";
-		selectedData = e.target;
-		selectedData.className = "list-group-item active";
-	}
-	else if (e.target && e.target.matches("button")) {
-		var deleteData = e.target.parentElement;
-		var req = new XMLHttpRequest();
-		req.open("DELETE", "deletedata", true);
-		req.onload = function () {
-			if (req.status == 200) {
-				var oOutput = document.getElementById("dataList");
-				oOutput.removeChild(deleteData);
-				deleteData = null;
-			}
-			else
-				alert("Файл не найден! (или что-то поломалось)")
-		};
-		var jsonQuery = {};
-		jsonQuery["name"] = getDataFileNameFromElement(deleteData);
-		var jsonData = JSON.stringify(jsonQuery);
-		req.send(jsonData); 
-	}
-});
-
-document.getElementById("modelList").addEventListener("click", function(e) {
-	if (e.target && e.target.matches("li")) {
-		if (selectedModel)
-			selectedModel.className = "list-group-item";
-		selectedModel = e.target;
-		selectedModel.className = "list-group-item active";
-	}
-	else if (e.target && e.target.matches("button")) {
-		var deletedModel = e.target.parentElement;
-		var req = new XMLHttpRequest();
-		req.open("DELETE", "deletemodel", true);
-		req.onload = function () {
-			if (req.status == 200) {
-				var oOutput = document.getElementById("modelList");
-				oOutput.removeChild(deletedModel);
-				deletedModel = null;
-			}
-			else
-				alert("Модель не найдена!")
-		};
-		var jsonQuery = {};
-		jsonQuery["method"] = selectedMethod;
-		jsonQuery["name"] = getDataFileNameFromElement(deletedModel);
-		var jsonData = JSON.stringify(jsonQuery);
-		req.send(jsonData);
-	}
-});
-
-document.getElementById("testMethod").addEventListener("click", function(e) {
-	if(selectedData) {
-		sampleSize = document.getElementById("sampleSizeInput").value;
-		if (+sampleSize === parseInt(sampleSize, 10)) {
-			var req = new XMLHttpRequest();
-			req.open("POST", "testmethod", true);
-			req.onload = function () {
-				if (req.status == 200) {
-					var jsonData = JSON.parse(req.responseText);
-					var output = document.getElementById("outputDiv");
-					renderJson(jsonData, output);
-				}
-				else
-					alert("Файл не найден! (или что-то поломалось)")
-			};
-			var jsonQuery = {};
-			jsonQuery["method"] = selectedMethod;
-			jsonQuery["data"] = getDataFileNameFromElement(selectedData);
-			jsonQuery["sampleSize"] = sampleSize;
-			var jsonData = JSON.stringify(jsonQuery);
-			req.send(jsonData);
-		}
-		else
-			alert("Неверно указан sample size! " + sampleSize);
-	}
-	else
-		alert("Файл не выбран!")
-});
-
-document.getElementById("trainModel").addEventListener("click", function(e) {
-	if(selectedData) {
-		sampleSize = document.getElementById("sampleSizeInput").value;
-		if (+sampleSize === parseInt(sampleSize, 10)) {
-			var req = new XMLHttpRequest();
-			var name = document.getElementById("modelName").value
-			req.open("POST", "trainmodel", true);
-			req.onload = function () {
-				if (req.status == 200) {
-					var jsonData = JSON.parse(req.responseText);
-					var oOutput = document.getElementById("modelList");
-					var li = document.createElement('li');
-					var deleteButton = document.createElement('button');
-					deleteButton.className = "btn btn-danger pull-right";
-					deleteButton.innerHTML = "Удалить";
-					li.className = "list-group-item";
-					li.innerHTML = jsonData["name"];
-					li.appendChild(deleteButton);
-					oOutput.appendChild(li);
-				} else if (req.status == 201)
-				{
-				
-				} else
-					alert("Файл не найден! (или что-то поломалось)")
-			};
-			var jsonQuery = {};
-			jsonQuery["method"] = selectedMethod;
-			jsonQuery["data"] = getDataFileNameFromElement(selectedData);
-			jsonQuery["sampleSize"] = sampleSize;
-			jsonQuery["name"] = name;
-			var jsonData = JSON.stringify(jsonQuery);
-			req.send(jsonData);
-		}
-		else
-			alert("Неверно указан sample size! " + sampleSize);
-	}
-	else
-		alert("Файл не выбран!")
-});
-
-document.getElementById("predictWithModel").addEventListener("click", function(e) {
-	if(selectedData && selectedModel) {
-		var req = new XMLHttpRequest();
-		req.open("POST", "predict", true);
-		req.onload = function () {
-			if (req.status == 200) {
-				var jsonData = JSON.parse(req.responseText);
-				var output = document.getElementById("outputDiv");
-				renderJson(jsonData, output);
-			}
-			else
-				alert("что-то поломалось")
-		};
-		var jsonQuery = {};
-		jsonQuery["method"] = selectedMethod;
-		jsonQuery["data"] = getDataFileNameFromElement(selectedData);
-		jsonQuery["name"] = getDataFileNameFromElement(selectedModel);
-		jsonQuery["query"] = document.getElementById("dataQuery").value;
-		var jsonData = JSON.stringify(jsonQuery);
-		req.send(jsonData);
-	}
-	else
-		alert("Выберете данные и модель!")
-});
-
-function getDataFileNameFromElement(liElem) {
-	return liElem.innerHTML.split("<button")[0];
-}
-
-function selectMethod(method) {
-	dropdown = document.getElementById("dropdownMenuButton")
-	switch(method) {
-		case 1:
-			dropdown.innerHTML = "Анализ HTTP заголовков";
-			selectedMethod = 1;
-			break;
-		case 2:
-			dropdown.innerHTML = "Анализ логинов";
-			selectedMethod = 2;
-			break;
-	}
-}
-
-function renderJson(jsonData, container) {
-	while (container.firstChild) { // clear container
-		container.removeChild(container.firstChild);
-	}
-	html = jsonData['html'];
-	script = jsonData['script'];
-	scriptData = jsonData['data'];
-	container.innerHTML = html;
-	eval(script);
-	renderResult();
-}
-
-// pull system stats
-var numberSent = 0;
-var numberRecieved = 0;
-var sendNextTimeout = 1000;
-function executeQuery() {
-	var req = new XMLHttpRequest();
-	req.open("GET", "sysstats", true);
-	req.onload = function () {
-		if (req.status == 200) {
-			statsOutput = document.getElementById("systemStats");
-			var jsonData = JSON.parse(req.responseText);
-			var keys = Object.keys(jsonData);
-			var datastring = "";
-			for(var i=0;i<keys.length;i++){
-				var key = keys[i];
-				datastring = datastring + key + " " + jsonData[key] + "\n";
-			}
-			statsOutput.innerHTML = datastring;
-			numberRecieved++;
-		}
-	};
-	req.send();
-	numberSent++;
-	if(numberRecieved >= (numberSent-1)) {
-		sendNextTimeout -= 100;
-	}	
-	else
-		sendNextTimeout += 100;
-	setTimeout(executeQuery, sendNextTimeout);
-}
-
-executeQuery(); // start pulling info about server stats
-</script>
-
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script src="script.js"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+</body>
+</html>

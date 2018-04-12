@@ -1,0 +1,65 @@
+.main-container {
+    display: flex;
+}
+
+.system-stat-section {
+    margin: 0 10px;
+}
+
+.control-section {
+    flex: 1 200px;
+    display: flex;
+    flex-flow: column;
+    margin: 10px;
+}
+
+.output-section {
+    flex: 2 400px;
+    display: flex;
+    flex-flow: column;
+    margin: 10px;
+}
+
+.control-section > * {
+    margin: 10px 0;
+}
+
+.file_upload {
+    padding: 15px;
+    display: block;
+    overflow: hidden;
+    font-size: 1em;
+    line-height: 2em;
+}
+
+.file_upload .button{
+    float: right;
+}
+.file_upload > mark{
+    background: transparent;
+    padding: 0;
+}
+
+.file_upload input[type=file]{
+    width: 0;   /* костыль style */
+    opacity: 0;
+}
+
+.list-group-item-filename {
+    float: left;
+    align-self: flex-start;
+}
+
+.data-list-delete {
+    float: right;
+    align-self: flex-end;
+}
+
+#resultGraph {
+    width: 100%;
+    height: auto;
+}
+
+.data-list-item {
+    display: flex;
+}

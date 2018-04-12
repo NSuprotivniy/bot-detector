@@ -2,6 +2,7 @@ import tornado.httpserver, tornado.ioloop, tornado.options, tornado.web, os.path
 from tornado.options import define, options
 from tornado.concurrent import run_on_executor
 from concurrent.futures import ThreadPoolExecutor
+from tornado.web import StaticFileHandler
 import time
 import pickle
 import base64
@@ -65,7 +66,9 @@ class Application(tornado.web.Application):
 			(r"/trainmodel", ModelTrainHandler),
 			(r"/deletemodel", DeleteModelHandler),
 			(r"/predict", ModelPredictHandler),
-			(r"/sysstats", SysStatsHandler)
+			(r"/sysstats", SysStatsHandler),
+			(r"/(.*.css)", StaticFileHandler, {"path": "./templates/"},),
+			(r"/(.*.js)", StaticFileHandler, {"path": "./templates/"},),
 		]
 		tornado.web.Application.__init__(self, handlers)
 
@@ -74,7 +77,7 @@ class IndexHandler(tornado.web.RequestHandler):
 		files = os.listdir("data")
 		models = os.listdir(os.path.join("models", "headers"))
 		self.render("templates/index.html", files=files, models=models)
-		
+
 class UploadHandler(tornado.web.RequestHandler):
 	executor = executor
 	@run_on_executor
