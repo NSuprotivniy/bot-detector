@@ -6,3 +6,4 @@ data/
 *.log
 .ipynb_checkpoints/
 config/*.conf
+__pycache__/
