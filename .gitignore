@@ -10,7 +10,7 @@ data/
 res/
 
 # Ignore apache examples
-src/main/java/examples/*
+/home/greg/Techno_proj/bot-detector/bot-detector/src/main/java
 
 *.log
 .ipynb_checkpoints/
