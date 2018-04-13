@@ -10,16 +10,11 @@ form.addEventListener('submit', function (ev) {
     req.open("POST", "upload", true);
     req.onload = function (oEvent) {
         if (req.status == 200) {
-            var li = document.createElement('li');
-            var deleteButton = document.createElement('button');
-            deleteButton.className = "btn btn-danger pull-right";
-            deleteButton.innerHTML = "Удалить";
-            li.className = "list-group-item";
             result = req.responseText;
             var resultJson = JSON.parse(result);
-            li.innerHTML = resultJson["name"];
-            li.appendChild(deleteButton);
-            oOutput.appendChild(li);
+            var template = document.getElementById("list-item-template").content.cloneNode(true);
+            template.querySelector(".list-group-item-filename").innerHTML = resultJson["name"];
+            oOutput.appendChild(template);
         } else if (req.status == 201) {
 
         } else if (req.status == 300) {
@@ -33,14 +28,8 @@ form.addEventListener('submit', function (ev) {
 }, false);
 
 document.getElementById("dataList").addEventListener("click", function (e) {
-    if (e.target && e.target.matches("li")) {
-        if (selectedData)
-            selectedData.classList.remove("active");
-        selectedData = e.target;
-        selectedData.classList.add("active");
-    }
-    else if (e.target && e.target.matches("button")) {
-        var deleteData = e.target.parentElement;
+    if (e.target && e.target.matches("button")) {
+        var deleteData = e.target.closest(".list-group-item");
         var req = new XMLHttpRequest();
         req.open("DELETE", "deletedata", true);
         req.onload = function () {
@@ -56,18 +45,19 @@ document.getElementById("dataList").addEventListener("click", function (e) {
         jsonQuery["name"] = getDataFileNameFromElement(deleteData);
         var jsonData = JSON.stringify(jsonQuery);
         req.send(jsonData);
+    } else {
+        if (selectedData)
+            selectedData.classList.remove("active");
+        selectedData = e.target.closest(".list-group-item");
+        selectedData.classList.add("active");
     }
 });
 
 document.getElementById("modelList").addEventListener("click", function (e) {
-    if (e.target && e.target.matches("li")) {
-        if (selectedModel)
-            selectedModel.classList.remove("active");
-        selectedModel = e.target;
-        selectedModel.classList.add("active");
-    }
-    else if (e.target && e.target.matches("button")) {
-        var deletedModel = e.target.parentElement;
+    console.log("event");
+    if (e.target && e.target.matches("button")) {
+        var deletedModel = e.target.closest(".list-group-item");
+        console.log(deletedModel);
         var req = new XMLHttpRequest();
         req.open("DELETE", "deletemodel", true);
         req.onload = function () {
@@ -84,6 +74,11 @@ document.getElementById("modelList").addEventListener("click", function (e) {
         jsonQuery["name"] = getDataFileNameFromElement(deletedModel);
         var jsonData = JSON.stringify(jsonQuery);
         req.send(jsonData);
+    } else {
+        if (selectedModel)
+            selectedModel.classList.remove("active");
+        selectedModel = e.target.closest(".list-group-item");;
+        selectedModel.classList.add("active");
     }
 });
 
@@ -127,14 +122,11 @@ document.getElementById("trainModel").addEventListener("click", function (e) {
                 if (req.status == 200) {
                     var jsonData = JSON.parse(req.responseText);
                     var oOutput = document.getElementById("modelList");
-                    var li = document.createElement('li');
-                    var deleteButton = document.createElement('button');
-                    deleteButton.className = "btn btn-danger pull-right";
-                    deleteButton.innerHTML = "Удалить";
-                    li.className = "list-group-item";
-                    li.innerHTML = jsonData["name"];
-                    li.appendChild(deleteButton);
-                    oOutput.appendChild(li);
+                    result = req.responseText;
+                    var resultJson = JSON.parse(result);
+                    var template = document.getElementById("list-item-template").content.cloneNode(true);
+                    template.querySelector(".list-group-item-filename").innerHTML = resultJson["name"];
+                    oOutput.appendChild(template);
                 } else if (req.status == 201) {
 
                 } else

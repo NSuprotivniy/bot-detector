@@ -47,7 +47,7 @@
         <div class="list-group data-list">
             <ul id="modelList" class="list-group">
                 {% for model in models %}
-                <li class="list-group-item">
+                <li class="list-group-item data-list-item">
                     <div class="list-group-item-filename">{{ model }}</div>
                     <div class="data-list-delete"><button class="btn btn-danger pull-right">Удалить</button></div>
                 </li>
@@ -67,6 +67,13 @@
     <div id="outputDiv" class="output-section">
     </div>
 </div>
+
+<template id="list-item-template">
+    <li class="list-group-item data-list-item">
+        <div class="list-group-item-filename"></div>
+        <div class="data-list-delete"><button class="btn btn-danger pull-right">Удалить</button></div>
+    </li>
+</template>
 
 <script src="script.js"></script>
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
