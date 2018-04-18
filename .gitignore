@@ -19,3 +19,5 @@ config/*.conf
 # greg
 # запускаю юпитер в docker-контейнере
 run_docker_jupyter.py
+
+webui/methods/__pycache__/

@@ -10,7 +10,7 @@ import pandas as pd
 import pyarrow.parquet as pq
 import pyarrow as pa
 import seaborn as sns
-import user_agents
+#import user_agents
 from matplotlib import pyplot as plt
 pd.set_option("display.precision", 2)
 from sklearn.model_selection import train_test_split, StratifiedKFold
