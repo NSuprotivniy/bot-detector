@@ -6,6 +6,8 @@ spark-warehouse/
 # Ignore data for apache examples
 data/
 
+model/
+
 # Ignore resourses (generated data via src/main/java/Utils/GenerateData.java)
 res/
 
