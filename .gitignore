@@ -2,8 +2,23 @@
 target/
 spark-warehouse/
 *.iml
+
+# Ignore data for apache examples
 data/
+
+model/
+
+# Ignore resourses (generated data via src/main/java/Utils/GenerateData.java)
+res/
+
 *.log
 .ipynb_checkpoints/
 config/*.conf
 __pycache__/
+
+
+# greg
+# запускаю юпитер в docker-контейнере
+run_docker_jupyter.py
+
+webui/methods/__pycache__/

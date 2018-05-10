@@ -1,0 +1,24 @@
+digraph Tree {
+node [shape=box, style="filled", color="black"] ;
+0 [label="PinsEditAjaxRB <= 0.5\ngini = 0.021\nsamples = 707237\nvalue = [699890, 7347]", fillcolor="#e58139fc"] ;
+1 [label="NotificationsLayerContent <= 0.5\ngini = 0.02\nsamples = 706859\nvalue = [699864, 6995]", fillcolor="#e58139fc"] ;
+0 -> 1 [labeldistance=2.5, labelangle=45, headlabel="True"] ;
+2 [label="DetailedUserGroupsListBlock <= 0.5\ngini = 0.019\nsamples = 706223\nvalue = [699584, 6639]", fillcolor="#e58139fd"] ;
+1 -> 2 ;
+3 [label="userPersonalPhotos <= 0.5\ngini = 0.018\nsamples = 706035\nvalue = [699553, 6482]", fillcolor="#e58139fd"] ;
+2 -> 3 ;
+4 [label="userStatuses <= 0.5\ngini = 0.018\nsamples = 705803\nvalue = [699492, 6311]", fillcolor="#e58139fd"] ;
+3 -> 4 ;
+5 [label="gini = 0.017\nsamples = 705578\nvalue = [699426, 6152]", fillcolor="#e58139fd"] ;
+4 -> 5 ;
+6 [label="gini = 0.415\nsamples = 225\nvalue = [66, 159]", fillcolor="#399de595"] ;
+4 -> 6 ;
+7 [label="gini = 0.388\nsamples = 232\nvalue = [61, 171]", fillcolor="#399de5a4"] ;
+3 -> 7 ;
+8 [label="gini = 0.275\nsamples = 188\nvalue = [31, 157]", fillcolor="#399de5cd"] ;
+2 -> 8 ;
+9 [label="gini = 0.493\nsamples = 636\nvalue = [280, 356]", fillcolor="#399de536"] ;
+1 -> 9 ;
+10 [label="gini = 0.128\nsamples = 378\nvalue = [26, 352]", fillcolor="#399de5ec"] ;
+0 -> 10 [labeldistance=2.5, labelangle=-45, headlabel="False"] ;
+}
