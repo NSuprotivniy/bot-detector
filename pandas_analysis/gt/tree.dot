@@ -1,0 +1,16 @@
+digraph Tree {
+node [shape=box, style="filled", color="black"] ;
+0 [label="PinsEditAjaxRB <= 0.5\ngini = 0.02\nsamples = 707237\nvalue = [699944, 7293]", fillcolor="#e58139fc"] ;
+1 [label="NotificationsLayerContent <= 0.5\ngini = 0.019\nsamples = 706831\nvalue = [699916, 6915]", fillcolor="#e58139fc"] ;
+0 -> 1 [labeldistance=2.5, labelangle=45, headlabel="True"] ;
+2 [label="DetailedUserGroupsListBlock <= 0.5\ngini = 0.018\nsamples = 706187\nvalue = [699630, 6557]", fillcolor="#e58139fd"] ;
+1 -> 2 ;
+3 [label="gini = 0.018\nsamples = 706003\nvalue = [699601, 6402]", fillcolor="#e58139fd"] ;
+2 -> 3 ;
+4 [label="gini = 0.266\nsamples = 184\nvalue = [29, 155]", fillcolor="#399de5cf"] ;
+2 -> 4 ;
+5 [label="gini = 0.494\nsamples = 644\nvalue = [286, 358]", fillcolor="#399de533"] ;
+1 -> 5 ;
+6 [label="gini = 0.128\nsamples = 406\nvalue = [28, 378]", fillcolor="#399de5ec"] ;
+0 -> 6 [labeldistance=2.5, labelangle=-45, headlabel="False"] ;
+}
