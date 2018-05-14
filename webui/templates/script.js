@@ -1,237 +1,87 @@
-var form = document.forms.namedItem("dataupload");
-var selectedData = null;
-var selectedMethod = 1;
-var selectedModel = null;
+// pull data
+Highcharts.setOptions({
+    global: {
+        useUTC: false
+    }
+});
 
-form.addEventListener('submit', function (ev) {
-    var oOutput = document.getElementById("dataList");
-    var oData = new FormData(form);
-    var req = new XMLHttpRequest();
-    req.open("POST", "upload", true);
-    req.onload = function (oEvent) {
-        if (req.status == 200) {
-            result = req.responseText;
-            var resultJson = JSON.parse(result);
-            var template = document.getElementById("list-item-template").content.cloneNode(true);
-            template.querySelector(".list-group-item-filename").innerHTML = resultJson["name"];
-            oOutput.appendChild(template);
-        } else if (req.status == 201) {
-
-        } else if (req.status == 300) {
-            alert("Поддерживаются только .parquet файлы.");
-        } else {
-            oOutput.innerHTML = "Error " + req.status + " occurred when trying to upload your file.<br \/>";
-        }
-    };
-    req.send(oData);
-    ev.preventDefault();
-}, false);
-
-document.getElementById("dataList").addEventListener("click", function (e) {
-    if (e.target && e.target.matches("button")) {
-        var deleteData = e.target.closest(".list-group-item");
-        var req = new XMLHttpRequest();
-        req.open("DELETE", "deletedata", true);
-        req.onload = function () {
-            if (req.status == 200) {
-                var oOutput = document.getElementById("dataList");
-                oOutput.removeChild(deleteData);
-                deleteData = null;
+// Create the chart
+Highcharts.stockChart('outputDiv', {
+    chart: {
+        events: {
+            load: function () {
+                var series = this.series[0];
+                setInterval(function () {
+					var req = new XMLHttpRequest();
+					req.open("GET", "results", true);
+					req.onload = function () {
+						if (req.status == 200) {
+							var jsonData = JSON.parse(req.responseText);
+							var str = JSON.stringify(jsonData, null, 2);
+							console.log(str);
+							var data = jsonData['predict_results'];
+							for(i in data) {
+								predict = data[i]
+								var str = JSON.stringify(predict, null, 2);
+								console.log(str);
+								var x = (new Date()).getTime() + predict['timestamp'], // current time
+								y = predict['proba'];
+								if(y !== undefined)
+									series.addPoint([x, y], true, true);
+							}
+						}
+					};
+					req.send();
+                }, 1000);
             }
-            else
-                alert("Файл не найден! (или что-то поломалось)")
-        };
-        var jsonQuery = {};
-        jsonQuery["name"] = getDataFileNameFromElement(deleteData);
-        var jsonData = JSON.stringify(jsonQuery);
-        req.send(jsonData);
-    } else {
-        if (selectedData)
-            selectedData.classList.remove("active");
-        selectedData = e.target.closest(".list-group-item");
-        selectedData.classList.add("active");
-    }
-});
-
-document.getElementById("modelList").addEventListener("click", function (e) {
-    console.log("event");
-    if (e.target && e.target.matches("button")) {
-        var deletedModel = e.target.closest(".list-group-item");
-        console.log(deletedModel);
-        var req = new XMLHttpRequest();
-        req.open("DELETE", "deletemodel", true);
-        req.onload = function () {
-            if (req.status == 200) {
-                var oOutput = document.getElementById("modelList");
-                oOutput.removeChild(deletedModel);
-                deletedModel = null;
-            }
-            else
-                alert("Модель не найдена!")
-        };
-        var jsonQuery = {};
-        jsonQuery["method"] = selectedMethod;
-        jsonQuery["name"] = getDataFileNameFromElement(deletedModel);
-        var jsonData = JSON.stringify(jsonQuery);
-        req.send(jsonData);
-    } else {
-        if (selectedModel)
-            selectedModel.classList.remove("active");
-        selectedModel = e.target.closest(".list-group-item");;
-        selectedModel.classList.add("active");
-    }
-});
-
-document.getElementById("testMethod").addEventListener("click", function (e) {
-    if (selectedData) {
-        sampleSize = document.getElementById("sampleSizeInput").value;
-        if (+sampleSize === parseInt(sampleSize, 10)) {
-            var req = new XMLHttpRequest();
-            req.open("POST", "testmethod", true);
-            req.onload = function () {
-                if (req.status == 200) {
-                    var jsonData = JSON.parse(req.responseText);
-                    var output = document.getElementById("outputDiv");
-                    renderJson(jsonData, output);
-                }
-                else
-                    alert("Файл не найден! (или что-то поломалось)")
-            };
-            var jsonQuery = {};
-            jsonQuery["method"] = selectedMethod;
-            jsonQuery["data"] = getDataFileNameFromElement(selectedData);
-            jsonQuery["sampleSize"] = sampleSize;
-            var jsonData = JSON.stringify(jsonQuery);
-            req.send(jsonData);
         }
-        else
-            alert("Неверно указан sample size! " + sampleSize);
-    }
-    else
-        alert("Файл не выбран!")
-});
+    },
 
-document.getElementById("trainModel").addEventListener("click", function (e) {
-    if (selectedData) {
-        sampleSize = document.getElementById("sampleSizeInput").value;
-        if (+sampleSize === parseInt(sampleSize, 10)) {
-            var req = new XMLHttpRequest();
-            var name = document.getElementById("modelName").value
-            req.open("POST", "trainmodel", true);
-            req.onload = function () {
-                if (req.status == 200) {
-                    var jsonData = JSON.parse(req.responseText);
-                    var oOutput = document.getElementById("modelList");
-                    result = req.responseText;
-                    var resultJson = JSON.parse(result);
-                    var template = document.getElementById("list-item-template").content.cloneNode(true);
-                    template.querySelector(".list-group-item-filename").innerHTML = resultJson["name"];
-                    oOutput.appendChild(template);
-                } else if (req.status == 201) {
+    rangeSelector: {
+        buttons: [{
+            count: 1,
+            type: 'minute',
+            text: '1M'
+        }, {
+            count: 5,
+            type: 'minute',
+            text: '5M'
+        }, {
+            type: 'all',
+            text: 'All'
+        }],
+        inputEnabled: false,
+        selected: 0
+    },
 
-                } else
-                    alert("Файл не найден! (или что-то поломалось)")
-            };
-            var jsonQuery = {};
-            jsonQuery["method"] = selectedMethod;
-            jsonQuery["data"] = getDataFileNameFromElement(selectedData);
-            jsonQuery["sampleSize"] = sampleSize;
-            jsonQuery["name"] = name;
-            var jsonData = JSON.stringify(jsonQuery);
-            req.send(jsonData);
-        }
-        else
-            alert("Неверно указан sample size! " + sampleSize);
-    }
-    else
-        alert("Файл не выбран!")
-});
+    title: {
+        text: 'Live random data'
+    },
 
-document.getElementById("predictWithModel").addEventListener("click", function (e) {
-    if (selectedData && selectedModel) {
-        var req = new XMLHttpRequest();
-        req.open("POST", "predict", true);
-        req.onload = function () {
-            if (req.status == 200) {
-                var jsonData = JSON.parse(req.responseText);
-                var output = document.getElementById("outputDiv");
-                renderJson(jsonData, output);
+    exporting: {
+        enabled: false
+    },
+
+    series: [{
+        name: 'Predict results',
+        data: (function () {
+            var data = [],
+                time = (new Date()).getTime(),
+                i;
+
+			 for (i = -999; i <= 0; i += 1) {
+                data.push([
+                    time + i * 1000,
+                    0.0
+                ]);
             }
-            else
-                alert("что-то поломалось")
-        };
-        var jsonQuery = {};
-        jsonQuery["method"] = selectedMethod;
-        jsonQuery["data"] = getDataFileNameFromElement(selectedData);
-        jsonQuery["name"] = getDataFileNameFromElement(selectedModel);
-        jsonQuery["query"] = document.getElementById("dataQuery").value;
-        var jsonData = JSON.stringify(jsonQuery);
-        req.send(jsonData);
-    }
-    else
-        alert("Выберете данные и модель!")
+            return data;
+        }())
+    }]
 });
 
-function getDataFileNameFromElement(liElem) {
-    return liElem.querySelector(".list-group-item-filename").innerHTML;
-}
 
-function selectMethod(method) {
-    dropdown = document.getElementById("dropdownMenuButton")
-    switch (method) {
-        case 1:
-            dropdown.innerHTML = "Анализ HTTP заголовков";
-            selectedMethod = 1;
-            break;
-        case 2:
-            dropdown.innerHTML = "Анализ логинов";
-            selectedMethod = 2;
-            break;
-    }
-}
 
-function renderJson(jsonData, container) {
-    while (container.firstChild) { // clear container
-        container.removeChild(container.firstChild);
-    }
-    html = jsonData['html'];
-    script = jsonData['script'];
-    scriptData = jsonData['data'];
-    container.innerHTML = html;
-    eval(script);
-    renderResult();
-}
 
-// pull system stats
-var numberSent = 0;
-var numberRecieved = 0;
-var sendNextTimeout = 1000;
 
-function executeQuery() {
-    var req = new XMLHttpRequest();
-    req.open("GET", "sysstats", true);
-    req.onload = function () {
-        if (req.status == 200) {
-            statsOutput = document.getElementById("systemStats");
-            var jsonData = JSON.parse(req.responseText);
-            var keys = Object.keys(jsonData);
-            var datastring = "";
-            for (var i = 0; i < keys.length; i++) {
-                var key = keys[i];
-                datastring = datastring + key + " " + jsonData[key] + "\n";
-            }
-            statsOutput.innerHTML = datastring;
-            numberRecieved++;
-        }
-    };
-    req.send();
-    numberSent++;
-    if (numberRecieved >= (numberSent - 1)) {
-        sendNextTimeout -= 100;
-    }
-    else
-        sendNextTimeout += 100;
-    setTimeout(executeQuery, sendNextTimeout);
-}
 
-executeQuery(); // start pulling info about server stats
