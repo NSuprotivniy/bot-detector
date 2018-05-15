@@ -10,25 +10,17 @@ Highcharts.stockChart('outputDiv', {
     chart: {
         events: {
             load: function () {
-                var series = this.series[0];
+                var seriesUsers = this.series[0];
+				var seriesBots = this.series[1];
                 setInterval(function () {
 					var req = new XMLHttpRequest();
 					req.open("GET", "results", true);
 					req.onload = function () {
 						if (req.status == 200) {
 							var jsonData = JSON.parse(req.responseText);
-							var str = JSON.stringify(jsonData, null, 2);
-							console.log(str);
-							var data = jsonData['predict_results'];
-							for(i in data) {
-								predict = data[i]
-								var str = JSON.stringify(predict, null, 2);
-								console.log(str);
-								var x = (new Date()).getTime() + predict['timestamp'], // current time
-								y = predict['proba'];
-								if(y !== undefined)
-									series.addPoint([x, y], true, true);
-							}
+							var time = (new Date()).getTime()
+							seriesUsers.addPoint([time, jsonData['users']], true, true);
+							seriesBots.addPoint([time, jsonData['bots']], true, true);
 						}
 					};
 					req.send();
@@ -63,7 +55,23 @@ Highcharts.stockChart('outputDiv', {
     },
 
     series: [{
-        name: 'Predict results',
+        name: 'Users',
+        data: (function () {
+            var data = [],
+                time = (new Date()).getTime(),
+                i;
+
+			 for (i = -999; i <= 0; i += 1) {
+                data.push([
+                    time + i * 1000,
+                    0.0
+                ]);
+            }
+            return data;
+        }())
+    },
+	{
+        name: 'Bots',
         data: (function () {
             var data = [],
                 time = (new Date()).getTime(),

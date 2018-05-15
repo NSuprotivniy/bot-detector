@@ -146,9 +146,14 @@ class GetResultsHandler(tornado.web.RequestHandler):
 	@run_on_executor
 	def start_worker(self):
 		global predicts_list
-		if not predicts_list:
-			predicts_list.append({ 'timestamp' : time() - model.start_time, 'proba' : 0.0 })
-		data = { 'predict_results' : predicts_list }
+		bots_num = 5
+		users_num = 1
+		for predict in predicts_list:
+			if predict['proba'] < 0.5:
+				users_num = users_num + 1
+			else:
+				bots_num = bots_num + 1
+		data = { 'users' : users_num , 'bots' : bots_num }
 		jsonData = json.dumps(data)
 		predicts_list = []
 		return jsonData
