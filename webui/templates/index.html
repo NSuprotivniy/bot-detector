@@ -11,61 +11,7 @@
     </div>
 </div>
 <div class="main-container">
-    <div class="control-section">
-        <div class="data">
-            <ul id="dataList" class="list-group data-list">
-                {% for file in files %}
-                <li class="list-group-item data-list-item">
-                    <div class="list-group-item-filename">{{ file }}</div>
-                    <div class="data-list-delete"><button class="btn btn-danger pull-right">Удалить</button></div>
-                </li>
-                {% end %}
-            </ul>
-        </div>
-
-        <form enctype="multipart/form-data" method="post" name="dataupload">
-            <label class="file_upload border">
-                <input type="submit" class="button btn btn-info" value="Добавить"/>
-                <input type="file" class="" name="data" required/>
-                <mark>Файл не выбран</mark>
-            </label>
-
-        </form>
-
-        <div class="dropdown">
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
-                    data-toggle="dropdown"
-                    aria-haspopup="true" aria-expanded="false">
-                Анализ HTTP заголовков
-            </button>
-            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                <a class="dropdown-item" href="#" onclick='selectMethod(1)'>Анализ HTTP заголовков</a>
-                <a class="dropdown-item" href="#" onclick='selectMethod(2)'>Анализ логинов</a>
-            </div>
-        </div>
-
-        <div class="list-group data-list">
-            <ul id="modelList" class="list-group">
-                {% for model in models %}
-                <li class="list-group-item data-list-item">
-                    <div class="list-group-item-filename">{{ model }}</div>
-                    <div class="data-list-delete"><button class="btn btn-danger pull-right">Удалить</button></div>
-                </li>
-                {% end %}
-            </ul>
-        </div>
-
-
-        <button id="trainModel" class="btn btn-info">Обучить модель</button>
-        <button id="testMethod" class="btn btn-info">Тестирование метода</button>
-        <input type="text" placeholder="Model name" class="form-control" id="modelName">
-        <input type="text" placeholder="Sample size" class="form-control" id="sampleSizeInput">
-        <button id="predictWithModel" class="btn btn-info">Предсказать</button>
-        <input type="text" placeholder="Query" class="form-control" id="dataQuery">
-    </div>
-
-    <div id="outputDiv" class="output-section">
-    </div>
+    <div id="outputDiv" style="height: 400px; min-width: 310px"></div>
 </div>
 
 <template id="list-item-template">
@@ -74,7 +20,9 @@
         <div class="data-list-delete"><button class="btn btn-danger pull-right">Удалить</button></div>
     </li>
 </template>
-
+<script src="https://code.highcharts.com/stock/highstock.js"></script>
+<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/stock/modules/export-data.js"></script>
 <script src="script.js"></script>
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
         integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
